@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Reviews</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        form {
+            display: inline;
+        }
+
+        
+        .add-review-btn button{
+            background-color: blue;
+            color: white;
+            font-weight: bold;
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 15px 20px;
+        }
+        /* Style for the 'click to see' link */
+        a.btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff; /* Blue background */
+            color: white; /* White text color */
+            text-decoration: none; /* Remove underline */
+            border-radius: 4px; /* Rounded corners */
+            text-align: center;
+        }
+
+        
+        /* New CSS for Edit button with orange background */
+        a.edit-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #FFA500; /* Orange background */
+            color: white; /* White text */
+            text-decoration: none; /* Remove underline */
+            border-radius: 4px; /* Rounded corners */
+            text-align: center;
+        }
+
+        a.edit-btn:hover {
+            background-color: #cc8400; /* Darker orange on hover */
+            text-decoration: none;
+        }
+
+        /* Style for the search form */
+        .search-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .search-container input, .search-container select {
+            padding: 8px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .search-container button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <!-- Add Reviews Button -->
+    <a href="{% url 'add_review' %}" class="add-review-btn">
+        <button type="button">Add Review</button>
+    </a>
+
+    <!-- Search and Department Filter Form -->
+    <div class="search-container">
+        <form method="GET" action="{% url 'review_list' %}">
+            <!-- Search by Employee -->
+          
+            <!-- Department Select Dropdown -->
+            <select name="department" class="department-dropdown">
+                <option value="">Select Department</option>
+                {% for department in departments %}
+                    <option value="{{ department.id }}" {% if request.GET.department == department.id %}selected{% endif %}>
+                        {{ department.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="text" name="employee_name" placeholder="Search Employee" value="{{ request.GET.employee_name }}">
+
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sr. No.</th>  <!-- New column for Serial Number -->
+                <th>Employee</th>
+                <th>Review Title</th>
+                <th>Review Date</th>
+                <th>Review Period</th>
+                <th>Rating</th>
+                <th>See Comment</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>  <!-- Display serial number -->
+                    <td>{{ review.employee.name }}</td>
+                    <td>{{ review.review_title }}</td>
+                    <td>{{ review.review_date }}</td>
+                    <td>{{ review.get_review_period_display }}</td>
+                    <td>{{ review.rating }}</td>
+                    <!-- Apply the 'btn' class to style the link like a button -->
+                    <td><a href="{% url 'review_detail' review.id %}" class="btn">Click to see</a></td>
+                    <!-- Apply the 'edit-btn' class for orange background for edit link -->
+                    <td><a href="{% url 'edit_review' review.id %}" class="edit-btn">Edit</a></td>
+                    <td>
+                        <form method="POST" action="{% url 'delete_review' review.id %}" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                            {% csrf_token %}
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="9">No reviews found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="form-container">
+       <!-- Employee Name Filter -->
+<div class="employee-filter">
+    <b><p>Filter By Employee</p></b>
+    <select name="employee_name" class="employee-dropdown">
+        <option value="">Select Employee</option>
+        {% for employee in employees %}
+            <option value="{{ employee.id }}" 
+                    {% if request.GET.employee_name == employee.id|stringformat:"s" %}selected{% endif %}>
+                {{ employee.name }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+        <div class="review-period-links">
+            <b><p>Filter By Period</p></b>
+            
+            <!-- Links for Filter By Period -->
+            <a href="{% url 'review_list' %}?review_period=1&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}" 
+               class="review-period-link {% if request.GET.review_period == '1' %}selected{% endif %}">
+                Monthly
+            </a><br>
+            <a href="{% url 'review_list' %}?review_period=2&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}" 
+               class="review-period-link {% if request.GET.review_period == '2' %}selected{% endif %}">
+                Quarterly
+            </a><br>
+            <a href="{% url 'review_list' %}?review_period=3&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}" 
+               class="review-period-link {% if request.GET.review_period == '3' %}selected{% endif %}">
+                Annually
+            </a>
+        </div>
+    
+        <!-- Date range filter form -->
+        <form method="GET" action="{% url 'review_list' %}" class="date-filter-form">
+            <label for="status">Filter Between Date range</label><br>
+            
+            <label for="from">From:</label><br>
+            <input type="date" name="from" value="{{ request.GET.from }}"><br>
+            
+            <label for="to">To:</label><br>
+            <input type="date" name="to" value="{{ request.GET.to }}">
+        </form>
+    
+        <!-- Rating filter links -->
+        <div class="rating-filter-links">
+            <label for="rating">Filter by Rating:</label><br>
+            <a href="{% url 'review_list' %}?rating=1-5&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}&from={{ request.GET.from }}&to={{ request.GET.to }}" 
+               class="rating-link {% if request.GET.rating == '1-5' %}selected{% endif %}">
+                Between 1-5
+            </a><br>
+            <a href="{% url 'review_list' %}?rating=6-8&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}&from={{ request.GET.from }}&to={{ request.GET.to }}" 
+               class="rating-link {% if request.GET.rating == '6-8' %}selected{% endif %}">
+                Between 6-8
+            </a><br>
+            <a href="{% url 'review_list' %}?rating=9+&employee_name={{ request.GET.employee_name }}&department={{ request.GET.department }}&from={{ request.GET.from }}&to={{ request.GET.to }}" 
+               class="rating-link {% if request.GET.rating == '9+' %}selected{% endif %}">
+                Above 9
+            </a>
+        </div>
+        <!-- Display Statistics -->
+
+
+    </div>
+    <br>
+    <br>
+    
+    <style>
+        .form-container {
+            display: flex;
+            /* Align items in a row */
+             /* Align elements to the start (left) */
+            gap: 100px; /* Space between filter sections */
+             /* Allow items to wrap if needed */
+             padding-left: 80px;
+             padding-right: 50px;
+        }
+    
+     
+    
+        /* Styling for the review period links */
+        .review-period-link {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            
+            
+        }
+    
+       
+    
+        .review-period-link.selected {
+            color: #0056b3;
+        }
+    
+        /* Styling for the rating links */
+        .rating-link {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+           
+        }
+    
+       
+    
+        .rating-link.selected {
+            color: #0056b3;
+        }
+    
+        /* Styling for the date filter form */
+       
+    
+        .date-filter-form label {
+            font-weight: bold;
+        }
+        .st{
+            display: flex;
+            /* Align items in a row */
+             /* Align elements to the start (left) */
+            gap: 100px; /* Space between filter sections */
+             /* Allow items to wrap if needed */
+             padding-left: 80px;
+             padding-right: 50px;
+
+        }
+    </style>
+    
+    <div class="st">       
+    <div class="statistics">
+        <b><div>Statistic:</div></b>
+      <b>  <div>Period wise Number of Reviews:</div>
+        <div>Monthly Reviews: {% if monthly_reviews %}{{ monthly_reviews }}{% else %}{% endif %}</div>
+        <div>Quarterly Reviews: {% if quarterly_reviews %}{{ quarterly_reviews }}{% else %}{% endif %}</div>
+        <div>Annually Reviews: {% if annually_reviews %}{{ annually_reviews }}{% else %}{% endif %}</div>
+   </b> </div>
+    <div>
+        <div>Rating vs Total number of employee:</div>
+      <b>  <div> Between 1-5{{ request.GET.employee_name }}</div>
+        <div> Between 6-8{{ request.GET.employee_name }} </div>
+        <div> Between 9{{ request.GET.employee_name }}</div>
+    </div>
+</b>
+    </div>
+</body>
+</html>

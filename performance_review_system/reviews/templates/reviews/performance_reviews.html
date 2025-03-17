@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Reviews</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        form {
+            display: inline;
+        }
+        .add-review-btn button {
+            background-color: blue;
+            color: white;
+            font-weight: bold;
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 15px 20px;
+        }
+        /* Style for the 'click to see' link */
+        a.btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+        }
+        a.btn:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+        /* Style for the search form */
+        .search-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .search-container input {
+            padding: 8px;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .search-container button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Add Reviews Button -->
+    <a href="{% url 'add_review' %}" class="add-review-btn">
+        <button type="button">Add Review</button>
+    </a>
+
+    <!-- Search Form -->
+    <div class="search-container">
+        <form method="GET" action="{% url 'performance_reviews' %}">
+            <input type="text" name="search" placeholder="Search Employees..." value="{{ request.GET.search }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sr. No.</th>  <!-- New column for Serial Number -->
+                <th>Employee</th>
+                <th>Review Title</th>
+                <th>Review Date</th>
+                <th>Review Period</th>
+                <th>Rating</th>
+                <th>See Comment</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>  <!-- Display serial number -->
+                    <td>{{ review.employee.name }}</td>
+                    <td>{{ review.review_title }}</td>
+                    <td>{{ review.review_date }}</td>
+                    <td>{{ review.get_review_period_display }}</td>
+                    <td>{{ review.rating }}</td>
+                    <td><a href="{% url 'review_detail' review.id %}" class="btn">Click to see</a></td>
+                    <td><a href="{% url 'edit_review' review.id %}" class="edit-btn">Edit</a></td>
+                    <td>
+                        <form method="POST" action="{% url 'delete_review' review.id %}" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                            {% csrf_token %}
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="9">No reviews found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
